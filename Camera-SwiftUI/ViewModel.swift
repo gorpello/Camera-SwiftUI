@@ -21,11 +21,15 @@ class ViewModel: CameraManagerDelegate {
     }
     
     func didOutput(sampleBuffer: CMSampleBuffer) {
-        
-        let pixelBuffer: CVPixelBuffer? = CMSampleBufferGetImageBuffer(sampleBuffer)
-        guard let imagePixelBuffer = pixelBuffer else { return }
-        
-        self.currentFrame = CIImage(cvPixelBuffer: imagePixelBuffer).image
+        self.currentFrame = sampleBuffer.cgImage
+    }
+}
+
+extension CMSampleBuffer {
+    var cgImage: CGImage? {
+        let pixelBuffer: CVPixelBuffer? = CMSampleBufferGetImageBuffer(self)
+        guard let imagePixelBuffer = pixelBuffer else { return nil }
+        return CIImage(cvPixelBuffer: imagePixelBuffer).image
     }
 }
 
@@ -36,3 +40,5 @@ extension CIImage {
         return cgImage
     }
 }
+
+
