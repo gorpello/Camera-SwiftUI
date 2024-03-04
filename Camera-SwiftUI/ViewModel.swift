@@ -21,7 +21,7 @@ class ViewModel: CameraManagerDelegate {
     }
     
     func didOutput(sampleBuffer: CMSampleBuffer) {
-        self.currentFrame = sampleBuffer.cgImage
+            self.currentFrame = sampleBuffer.cgImage
     }
 }
 

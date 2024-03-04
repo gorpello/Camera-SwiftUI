@@ -9,9 +9,6 @@ import Foundation
 import AVFoundation
 
 protocol CameraManagerDelegate {
-    /**
-     This method delivers the pixel buffer of the current frame seen by the device's camera.
-     */
     func didOutput(sampleBuffer: CMSampleBuffer)
 }
 
@@ -42,8 +39,6 @@ class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         }
     }
     
-    //    private let sessionQueue = DispatchQueue(label: "session.queue")
-    private let videoOutputQueue = DispatchQueue(label: "video.output.queue")
     
     override init() {
         super.init()
@@ -54,6 +49,7 @@ class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         }
         
     }
+    
     
     private func configureSession() async {
         guard await isAuthorized else { return }
@@ -71,9 +67,14 @@ class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         }
         
         videoDataOutput.setSampleBufferDelegate(self, queue: .main)
-     
+        
         if captureSession.canAddOutput(videoDataOutput) {
             captureSession.addOutput(videoDataOutput)
+        }
+        
+        if let connection = videoDataOutput.connection(with: .video),
+           connection.isVideoRotationAngleSupported(90){
+            connection.videoRotationAngle = 90
         }
         
         captureSession.commitConfiguration()

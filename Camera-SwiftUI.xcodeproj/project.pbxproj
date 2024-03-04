@@ -17,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		998987392B922A1000A02DBB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		99B6B5882B8DFACE00565208 /* Camera-SwiftUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Camera-SwiftUI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		99B6B58B2B8DFACE00565208 /* Camera_SwiftUIApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera_SwiftUIApp.swift; sourceTree = "<group>"; };
 		99B6B58D2B8DFACE00565208 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -57,6 +58,7 @@
 		99B6B58A2B8DFACE00565208 /* Camera-SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				998987392B922A1000A02DBB /* Info.plist */,
 				99B6B58B2B8DFACE00565208 /* Camera_SwiftUIApp.swift */,
 				99B6B58D2B8DFACE00565208 /* ContentView.swift */,
 				99B6B59B2B8E23E100565208 /* ViewModel.swift */,
@@ -287,6 +289,7 @@
 				DEVELOPMENT_TEAM = 5QJLL8HM6C;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Camera-SwiftUI/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Get the camera feed";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -318,6 +321,7 @@
 				DEVELOPMENT_TEAM = 5QJLL8HM6C;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Camera-SwiftUI/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Get the camera feed";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
