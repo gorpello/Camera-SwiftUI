@@ -14,6 +14,7 @@ struct ContentView: View {
     
     var body: some View {
         CameraView(image: $viewModel.currentFrame)
+            .ignoresSafeArea()
     }
 }
 

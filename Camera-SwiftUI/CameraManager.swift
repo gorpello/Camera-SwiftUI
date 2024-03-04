@@ -5,22 +5,34 @@
 //  Created by Gianluca Orpello on 27/02/24.
 //
 
-import Foundation
+import CoreImage
 import AVFoundation
-
-protocol CameraManagerDelegate {
-    func didOutput(sampleBuffer: CMSampleBuffer)
-}
-
+import os.log
+import UIKit
 
 class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     
-    // MARK: CameraFeedManagerDelegate
-    var delegate: CameraManagerDelegate?
+    private let logger = Logger(subsystem: "com.CreateWithSwift.Camera-SwiftUI.CameraManager",
+                                category: "CameraManager")
+
     
     private let captureSession = AVCaptureSession()
-    private let videoDataOutput = AVCaptureVideoDataOutput()
-    private let defaultVideoDevice = AVCaptureDevice.default(for: .video)
+    private var deviceInput: AVCaptureDeviceInput?
+    private var videoOutput: AVCaptureVideoDataOutput?
+    private let systemPreferredCamera = AVCaptureDevice.systemPreferredCamera
+
+    private var sessionQueue = DispatchQueue(label: "video.preview.session")
+    
+    
+    private var addToPreviewStream: ((CGImage) -> Void)?
+    
+    lazy var previewStream: AsyncStream<CGImage> = {
+        AsyncStream { continuation in
+            addToPreviewStream = { cgImage in
+                continuation.yield(cgImage)
+            }
+        }
+    }()
     
     private var isAuthorized: Bool {
         get async {
@@ -39,6 +51,18 @@ class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         }
     }
     
+    private var videoOutputRotationAngle: CGFloat {
+        switch UIDevice.current.orientation {
+        case .portrait:
+            return 90.0
+        case .landscapeLeft:
+            return 0.0
+        case .landscapeRight:
+            return 180.0
+        default:
+            return 0.0
+        }
+    }
     
     override init() {
         super.init()
@@ -52,46 +76,52 @@ class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     
     
     private func configureSession() async {
-        guard await isAuthorized else { return }
+        guard await isAuthorized,
+              let systemPreferredCamera,
+              let deviceInput = try? AVCaptureDeviceInput(device: systemPreferredCamera)
+        else { return }
         
         captureSession.beginConfiguration()
         
-        if captureSession.canSetSessionPreset(.iFrame1280x720) {
-            captureSession.sessionPreset = .iFrame1280x720
+        defer {
+            self.captureSession.commitConfiguration()
         }
         
-        if let defaultVideoDevice,
-           let videoDeviceInput = try? AVCaptureDeviceInput(device: defaultVideoDevice),
-           captureSession.canAddInput(videoDeviceInput) {
-            captureSession.addInput(videoDeviceInput)
+        let videoOutput = AVCaptureVideoDataOutput()
+       
+        videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
+        
+        guard captureSession.canAddInput(deviceInput) else {
+            logger.error("Unable to add device input to capture session.")
+            return
         }
         
-        videoDataOutput.setSampleBufferDelegate(self, queue: .main)
-        
-        if captureSession.canAddOutput(videoDataOutput) {
-            captureSession.addOutput(videoDataOutput)
+        guard captureSession.canAddOutput(videoOutput) else {
+            logger.error("Unable to add video output to capture session.")
+            return
         }
         
-        if let connection = videoDataOutput.connection(with: .video),
-           connection.isVideoRotationAngleSupported(90){
-            connection.videoRotationAngle = 90
-        }
-        
-        captureSession.commitConfiguration()
+        captureSession.addInput(deviceInput)
+        captureSession.addOutput(videoOutput)
+                
     }
+    
     
     private func startSession() async {
         guard await isAuthorized else { return }
         captureSession.startRunning()
     }
     
-    /**
-     AVCaptureVideoDataOutputSampleBufferDelegate
-     */
-    
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        // Delegates the pixel buffer to the ViewController.
-        delegate?.didOutput(sampleBuffer: sampleBuffer)
+    private func rotate(by angle: CGFloat, from connection: AVCaptureConnection) {
+        guard connection.isVideoRotationAngleSupported(angle) else { return }
+        connection.videoRotationAngle = angle
     }
     
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        guard let currentFrame = sampleBuffer.cgImage else { return }
+        rotate(by: videoOutputRotationAngle,
+               from: connection)
+        addToPreviewStream?(currentFrame)
+    }
 }
+

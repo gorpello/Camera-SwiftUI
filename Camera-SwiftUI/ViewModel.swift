@@ -10,18 +10,24 @@ import AVFoundation
 import CoreImage
 
 @Observable
-class ViewModel: CameraManagerDelegate {
+class ViewModel {
     
     var currentFrame: CGImage?
     
     private let cameraManager = CameraManager()
     
     init() {
-        cameraManager.delegate = self
+        Task {
+            await handleCameraPreviews()
+        }
     }
     
-    func didOutput(sampleBuffer: CMSampleBuffer) {
-            self.currentFrame = sampleBuffer.cgImage
+    func handleCameraPreviews() async {
+        for await image in cameraManager.previewStream {
+            Task { @MainActor in
+                currentFrame = image
+            }
+        }
     }
 }
 
@@ -29,12 +35,12 @@ extension CMSampleBuffer {
     var cgImage: CGImage? {
         let pixelBuffer: CVPixelBuffer? = CMSampleBufferGetImageBuffer(self)
         guard let imagePixelBuffer = pixelBuffer else { return nil }
-        return CIImage(cvPixelBuffer: imagePixelBuffer).image
+        return CIImage(cvPixelBuffer: imagePixelBuffer).cgImage
     }
 }
 
 extension CIImage {
-    var image: CGImage? {
+    var cgImage: CGImage? {
         let ciContext = CIContext()
         guard let cgImage = ciContext.createCGImage(self, from: self.extent) else { return nil }
         return cgImage
