@@ -5,12 +5,11 @@
 //  Created by Gianluca Orpello on 27/02/24.
 //
 
-import CoreImage
 import AVFoundation
 import os.log
 import UIKit
 
-class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+class CameraManager: NSObject {
     
     private let logger = Logger(subsystem: "com.CreateWithSwift.Camera-SwiftUI.CameraManager",
                                 category: "CameraManager")
@@ -54,8 +53,6 @@ class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         switch UIDevice.current.orientation {
         case .portrait:
             return 90.0
-        case .landscapeLeft:
-            return 0.0
         case .landscapeRight:
             return 180.0
         default:
@@ -72,7 +69,6 @@ class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         }
         
     }
-    
     
     private func configureSession() async {
         guard await isAuthorized,
@@ -115,6 +111,10 @@ class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         guard connection.isVideoRotationAngleSupported(angle) else { return }
         connection.videoRotationAngle = angle
     }
+
+}
+
+extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard let currentFrame = sampleBuffer.cgImage else { return }
@@ -122,5 +122,22 @@ class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
                from: connection)
         addToPreviewStream?(currentFrame)
     }
+    
 }
 
+
+extension CMSampleBuffer {
+    var cgImage: CGImage? {
+        let pixelBuffer: CVPixelBuffer? = CMSampleBufferGetImageBuffer(self)
+        guard let imagePixelBuffer = pixelBuffer else { return nil }
+        return CIImage(cvPixelBuffer: imagePixelBuffer).cgImage
+    }
+}
+
+extension CIImage {
+    var cgImage: CGImage? {
+        let ciContext = CIContext()
+        guard let cgImage = ciContext.createCGImage(self, from: self.extent) else { return nil }
+        return cgImage
+    }
+}
