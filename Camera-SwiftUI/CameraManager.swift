@@ -23,7 +23,6 @@ class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
 
     private var sessionQueue = DispatchQueue(label: "video.preview.session")
     
-    
     private var addToPreviewStream: ((CGImage) -> Void)?
     
     lazy var previewStream: AsyncStream<CGImage> = {
